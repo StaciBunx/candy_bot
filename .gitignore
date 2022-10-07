@@ -2,3 +2,4 @@ config.py
 __pycache__
 log.txt
 main
+test.py
