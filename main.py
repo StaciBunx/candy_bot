@@ -16,22 +16,26 @@ CANDY_QYT, MAX_PULL, FIRST_TURN, GAME = range(4)
 
 async def start(update, context):
     await update.message.reply_text(
-        f'Привет, {update.effective_user.first_name}!\n'
-        'Добро пожаловать в игру Candy Crush!\n'
-        'Правила: на столе лежат конфеты. Каждый ход соперники забирают со стола конфеты. Тот, кто забирает со стола последнюю конфету - проигрывает партию.'
-        'Нажмите /bye, чтобы закончить разговор.')
+        f'Привет, {update.effective_user.first_name}! Добро пожаловать в игру Candy Crush! '
+        'Правила: на столе лежат конфеты. Каждый ход соперники забирают себе некоторое количество. Тот, кто забирает со стола последнюю конфету - проигрывает партию. '
+        'Передумали играть? Нажмите /bye, чтобы закончить разговор.')
     await update.message.reply_text(
-        'Введите количествово конфет в куче:')
+        'Введите количество конфет в куче:')
     return CANDY_QYT
 
 
 async def candy_qyt(update, context):
     candy_qyt = update.message.text
-    await update.message.reply_text(f'Хорошо, в кучке теперь {candy_qyt} конфет.')
-    await update.message.reply_text(
-        f'Введите максимальное количество конфет в раунд, которое можно вытянуть, не больше {candy_qyt}:')
-    context.user_data['candy_qyt'] = candy_qyt
-    return MAX_PULL
+    if candy_qyt.isdigit():
+        candy_qyt = abs(int(candy_qyt))
+        await update.message.reply_text(f'Хорошо, в кучке теперь {candy_qyt} конфет.')
+        await update.message.reply_text(
+            f'Введите максимальное количество конфет в раунд, которое можно вытянуть, но не больше {candy_qyt}:')
+        context.user_data['candy_qyt'] = candy_qyt
+        return MAX_PULL
+    else:
+        await update.message.reply_text("Вы ввели не число! Попробуйте еще раз:")
+        return CANDY_QYT
 
 
 async def max_pull(update, context):
@@ -91,6 +95,7 @@ async def game(update, context):
             await update.message.reply_text('В кучке не осталось конфет! Вы проиграли!')
             return ConversationHandler.END
 
+
 async def bye(update, context):
     user = update.message.from_user
     await update.message.reply_text(
@@ -106,7 +111,7 @@ game_conversation_handler = ConversationHandler(
     entry_points=[CommandHandler('start', start)],
     # этапы разговора, каждый со своим списком обработчиков сообщений
     states={
-        CANDY_QYT: [MessageHandler(filters.Regex(r'\d+'), candy_qyt)],
+        CANDY_QYT: [MessageHandler(filters.ALL, candy_qyt)],
         MAX_PULL: [MessageHandler(filters.Regex(r'\d+'), max_pull)],
         FIRST_TURN: [CommandHandler('next', first_turn)],
         GAME: [MessageHandler(filters.Regex(r'\d+'), game)],
